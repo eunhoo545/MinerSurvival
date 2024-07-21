@@ -1,13 +1,16 @@
 package org.example.code.rpg.Event;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
@@ -23,6 +26,7 @@ public class BlockBreakListener implements Listener {
     private RPG plugin;
     private Map<UUID, Double> playerO2 = new HashMap<>();
     private final HashMap<UUID, Integer> playerBlockCount = new HashMap<>();
+    private final Map<UUID, Long> cooldowns = new HashMap<>();
     private final List<Material> trackedBlocks = Arrays.asList(
             Material.STONE, Material.COBBLESTONE, Material.MOSSY_COBBLESTONE, Material.GRANITE,
             Material.DIORITE, Material.ANDESITE, Material.DEEPSLATE, Material.COBBLED_DEEPSLATE,
@@ -248,6 +252,35 @@ public class BlockBreakListener implements Listener {
             case ANCIENT_DEBRIS:
                 player.sendMessage("고대 잔해를 부쉈습니다!");
                 break;
+        }
+    }
+
+    @EventHandler
+    public void onEntityPotionEffect(EntityPotionEffectEvent event) {
+        Entity entity = event.getEntity();
+        if(entity instanceof Player){
+            Player player = ((Player) entity).getPlayer();
+            JobConfigManager jobConfigManager = new JobConfigManager(plugin);
+            String[] a = jobConfigManager.getPlayerJob(player).split(",");
+            String job = a[0];
+            String level = a[1];
+            if (job.equals("§7§l광부") && level.equals("2차")) {
+                if (!(event.getEntity() instanceof Player)) return;
+                Player player2 = (Player) event.getEntity();
+                if (event.getAction() == EntityPotionEffectEvent.Action.REMOVED || event.getAction() == EntityPotionEffectEvent.Action.CLEARED) {
+                    PotionEffectType type = event.getModifiedType();
+                    if (type == PotionEffectType.NIGHT_VISION) {
+                        long cooldownEnd = System.currentTimeMillis() + 30000;
+                        cooldowns.put(player2.getUniqueId(), cooldownEnd);
+                        Bukkit.getScheduler().runTaskLater(plugin, () -> cooldowns.remove(player2.getUniqueId()), 600L);
+                    }
+                    Long cooldownEnd = cooldowns.get(player2.getUniqueId());
+                    if (cooldownEnd != null && System.currentTimeMillis() < cooldownEnd) {
+                        event.setCancelled(true); // 쿨타임 동안 포션 효과 적용 차단
+                        player2.sendMessage("야간투시 효과의 쿨타임은 " + (cooldownEnd - System.currentTimeMillis()) / 1000 + "초 입니다.");
+                    }
+                }
+            }
         }
     }
 }
