@@ -43,7 +43,7 @@ public class InventoryClickListener implements Listener {
             String displayName = ChatColor.stripColor(clickedItem.getItemMeta().getDisplayName());
             if (displayName.equals("전직")) {
                 guiManager.jobShop(player);
-            } else if (displayName.equals("[전직] 광부 1차")) {
+            } else if (displayName.equals("[전직] 광부 1차")) { //2~4차도 추가하기
                 double cost = 10000.0;
                 if (moneyManager.getBalance(player) >= cost) {
                     moneyManager.subtractBalance(player, cost);
