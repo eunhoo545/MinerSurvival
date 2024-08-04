@@ -6,6 +6,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.example.code.rpg.Event.RenameAnvilListener;
 import org.example.code.rpg.RPG;
 
 import java.util.ArrayList;
@@ -23,20 +24,22 @@ public class JobConfigManager {
         plugin.saveConfig();
     }
 
-    // 직업 전직책 이름 체크 함수(switch case문 너무 길어져서 이걸로 변경)
-    public boolean jobBookNameCheck(String jobBookName, String level) {
-        List<String> minerBooks = Arrays.asList("광부 1차", "광부 2차", "광부 3차", "광부 4차");
-        if(minerBooks.contains(level) && jobBookName.contains("광부")) {
-            return false;
-        }
-        return true;
-    }
-
     public String getPlayerJob(Player player) {
         FileConfiguration config = plugin.getConfig();
         String job = config.getString("users." + player.getUniqueId().toString() + ".job", "직업 없음");
         String level = config.getString("users." + player.getUniqueId().toString() + ".level", "1차");
         return job + "," + level;
+    }
+
+    // 직업 전직책 이름 체크 함수(switch case문 너무 길어져서 이걸로 변경)
+    public boolean jobBookNameCheck(String jobBookName) {
+        List<String> minerBooks = Arrays.asList("광부 1차", "광부 2차", "광부 3차", "광부 4차");
+        for (String minerBook : minerBooks) {
+            if (jobBookName.contains(minerBook)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void createCustomItem(Player player, String command,String job) {
